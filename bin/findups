@@ -18,18 +18,21 @@ import findups.scanner
 
 
 def main():
+    hostname = socket.gethostname()
     parser = argparse.ArgumentParser()
-    parser.add_argument('--db_path', action="store",
-                        default=os.path.join(os.getenv("HOME"), socket.gethostname() + ".db"),
+    parser.add_argument('--db_path', action="append",
+                        default=[os.path.join(os.getenv("HOME"), hostname + ".db")],
                         help="Path of the DB")
     parser.add_argument('--debug', action="store_true",
                         help="Enable debugging")
     parser.add_argument('--accuracy', action="store", default=findups.scanner.SAME_SIZE,
                         help="Specify accuracy level")
+    parser.add_argument('--device_id', action="store", default=hostname,
+                        help="Path of the directory to scan")
     parser.add_argument('action', choices=['scan', 'merge', 'compare'],
                         help="Specify accuracy level")
-    parser.add_argument('directory', action="store",
-                        help="Path of the directory to scan")
+    parser.add_argument('directories', action="store", nargs='*',
+                        help="Paths of the directories to scan")
     ns = parser.parse_args()
     if ns.debug:
         log_level = logging.DEBUG
@@ -38,14 +41,17 @@ def main():
     accuracy = int(ns.accuracy)
     print("*****************************")
     if ns.action == 'scan':
-        scanner = findups.scanner.DirScanner(db_path=ns.db_path, log_level=log_level, accuracy=accuracy)
         start = time.time()
-        n_files, total_size = scanner.scan(ns.directory)
-        end = time.time()
-        duration = end - start
-        print('%d files adding up to %d MBs have been scanned in %d seconds' %
-              (n_files, int(total_size/(1024*1024)), duration))
-        print('%d files/second' % (int(n_files/duration)))
+        while ns.directories:
+            scanner = findups.scanner.DirScanner(device_id=ns.device_id, db_path=ns.db_path[0], log_level=log_level,
+                                                 accuracy=accuracy)
+            directory = ns.directories.pop()
+            n_files, total_size = scanner.scan(directory)
+            end = time.time()
+            duration = end - start
+            print('%d files adding up to %d KBs have been scanned in %d seconds' %
+                  (n_files, int(total_size/1024), duration))
+            print('%d files/second' % (int(n_files/duration)))
     elif ns.action == 'merge':
         raise NotImplementedError
     elif ns.action == 'compare':
