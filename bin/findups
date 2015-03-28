@@ -52,10 +52,6 @@ def main():
             print('%d files adding up to %d KBs have been scanned in %d seconds' %
                   (n_files, int(total_size/1024), duration))
             print('%d files/second' % (int(n_files/duration)))
-    elif ns.action == 'merge':
-        raise NotImplementedError
-    elif ns.action == 'compare':
-        raise NotImplementedError
 
 if __name__ == '__main__':
     main()
