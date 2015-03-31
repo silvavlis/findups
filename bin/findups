@@ -47,6 +47,8 @@ def main():
                                                  accuracy=accuracy)
             directory = ns.directories.pop()
             n_files, total_size = scanner.scan(directory)
+            if not n_files or not total_size:
+                continue
             end = time.time()
             duration = end - start
             print('%d files adding up to %d KBs have been scanned in %d seconds' %

@@ -43,9 +43,46 @@ class DirScanner(commons.FindupsCommons):
         self._mtime_cmp = mtime_cmp.Mtime(self._db_conn)
         self._size_cmp = size_cmp.Size(self._db_conn)
 
+    def _is_subdir(self, dir):
+        sql_query = 'SELECT root_dir FROM tree WHERE (device=:device) AND (root_dir=substr(:dir,1,length(root_dir)));'
+        try:
+            self._curs.execute(sql_query, {'device': self._device_id, 'dir': dir})
+            subdirs = self._curs.fetchall()
+            self._db_conn.commit()
+            if subdirs:
+                subdirs = [subdir[0] for subdir in subdirs]
+                logging.warning("Directory %s is a subdir of the already existing tree %s" % (dir, ', '.join(subdirs)))
+                return True
+            else:
+                return False
+        except:
+            raise
+
+    def _is_parent(self, dir):
+        sql_query = 'SELECT root_dir FROM tree WHERE (device=?) AND (root_dir LIKE ?);'
+        try:
+            self._curs.execute(sql_query, (self._device_id, "%s%%" % dir))
+            subdirs = self._curs.fetchall()
+            self._db_conn.commit()
+            if subdirs:
+                subdirs = [subdir[0] for subdir in subdirs]
+                logging.warning("Following existing trees are subdirs of %s: %s" % (dir, ', '.join(subdirs)))
+                return subdirs
+            else:
+                return False
+        except:
+            raise
+
     def scan(self, root_scan):
         """
         """
+        print("-----------------\nScanning directory (accuracy=%s) in %s" % (self._accuracy, root_scan))
+        if self._is_subdir(root_scan):
+            print("Directory %s is a subdir of an already existing tree" % root_scan)
+            return 0, 0
+        subdirs = self._is_parent(root_scan)
+        if subdirs:
+            print("One of the existing trees is a subdir of %s" % root_scan)
         root_scan = root_scan.rstrip("/")
         try:
             self._curs.execute('INSERT INTO tree(device, root_dir) VALUES (:device, :root);',
@@ -59,8 +96,10 @@ class DirScanner(commons.FindupsCommons):
         self._dir_entry_cmp.set_tree(tree_id)
         logging.info("Scanning directory (accuracy=%s) in %s" % (self._accuracy, root_scan))
         n_files = 0
-        # get the size and modification time of the files in the directory
         for root, _, files in os.walk(root_scan):
+            if subdirs and root in subdirs:
+                print("Scanning %s not needed, since previously scanned" % root)
+                continue
             rel_root = root[len(root_scan)+1:]
             self._dir_entry_cmp.add(rel_root, type="dir", size=0, mtime=0)
             dir_size = 0
