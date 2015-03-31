@@ -41,8 +41,8 @@ def main():
     accuracy = int(ns.accuracy)
     print("*****************************")
     if ns.action == 'scan':
-        start = time.time()
         while ns.directories:
+            start = time.time()
             scanner = findups.scanner.DirScanner(device_id=ns.device_id, db_path=ns.db_path[0], log_level=log_level,
                                                  accuracy=accuracy)
             directory = ns.directories.pop()
