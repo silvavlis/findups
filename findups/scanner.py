@@ -39,9 +39,9 @@ class DirScanner(commons.FindupsCommons):
             if str(e) != "UNIQUE constraint failed: device.id":
                 raise
             logging.debug("Device %s is not new" % device_id)
-        self._dir_entry_cmp = dir_entry_cmp.DirEntry(self._dbconn)
-        self._mtime_cmp = mtime_cmp.Mtime(self._dbconn)
-        self._size_cmp = size_cmp.Size(self._dbconn)
+        self._dir_entry_cmp = dir_entry_cmp.DirEntry(self._db_conn)
+        self._mtime_cmp = mtime_cmp.Mtime(self._db_conn)
+        self._size_cmp = size_cmp.Size(self._db_conn)
 
     def scan(self, root_scan):
         """

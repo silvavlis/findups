@@ -34,8 +34,8 @@ class FindupsCommons(object):
         logging.debug("DB path: %s" % self._db_location)
         new_db = not os.path.isfile(db_path)
 
-        self._dbconn = sqlite3.connect(self._db_location)
-        self._curs = self._dbconn.cursor()
+        self._db_conn = sqlite3.connect(self._db_location)
+        self._curs = self._db_conn.cursor()
         if new_db:
             self._db_schema()
         self._accuracy = accuracy
@@ -75,13 +75,13 @@ class FindupsCommons(object):
             self._curs.execute(table_creation)
         for view_creation in views:
             self._curs.execute(view_creation)
-        self._dbconn.commit()
+        self._db_conn.commit()
         logging.info("Database initialized in %s" % self._db_location)
 
     def __del__(self):
         """
         Ensure that the connection with the DB is properly closed.
         """
-        self._dbconn.commit()
+        self._db_conn.commit()
         self._curs.close()
-        self._dbconn.close()
+        self._db_conn.close()
