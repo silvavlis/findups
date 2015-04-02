@@ -107,7 +107,7 @@ class DirScanner(commons.FindupsCommons):
                         dirs_to_process.append(dir)
                 dirs[:] = dirs_to_process
             rel_root = root[len(root_scan)+1:]
-            self._dir_entry_cmp.add(rel_root, type="dir", size=0, mtime=0)
+            self._dir_entry_cmp.add(rel_root, type="dir", size=0, mtime=os.path.getmtime(root))
             dir_size = 0
             for filename in files:
                 file_path = os.path.join(root, filename)
