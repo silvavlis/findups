@@ -96,10 +96,16 @@ class DirScanner(commons.FindupsCommons):
         self._dir_entry_cmp.set_tree(tree_id)
         logging.info("Scanning directory (accuracy=%s) in %s" % (self._accuracy, root_scan))
         n_files = 0
-        for root, _, files in os.walk(root_scan):
-            if subdirs and root in subdirs:
-                print("Scanning %s not needed, since previously scanned" % root)
-                continue
+        for root, dirs, files in os.walk(root_scan, topdown=True):
+            if subdirs:
+                dirs_to_process = []
+                for dir in dirs:
+                    dir_path = os.path.join(root, dir)
+                    if dir_path in subdirs:
+                        print("Scanning subdirectory %s not needed, since previously scanned" % dir_path)
+                    else:
+                        dirs_to_process.append(dir)
+                dirs[:] = dirs_to_process
             rel_root = root[len(root_scan)+1:]
             self._dir_entry_cmp.add(rel_root, type="dir", size=0, mtime=0)
             dir_size = 0
