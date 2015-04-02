@@ -73,33 +73,6 @@ class DirScanner(commons.FindupsCommons):
         except:
             raise
 
-    def _change_parent(self, parent, subdir):
-        logging.info('Moving tree %s to hang from %s' % (subdir, parent))
-        print('Moving tree %s to hang from %s' % (subdir, parent))
-        sql_query = 'SELECT id FROM tree WHERE root_dir = :parent;'
-        self._curs.execute(sql_query, {'parent': parent})
-        parent_id = self._curs.fetchone()[0]
-        sql_query = 'SELECT id FROM tree WHERE root_dir = :subdir;'
-        self._curs.execute(sql_query, {'subdir': subdir})
-        subdir_id = self._curs.fetchone()[0]
-        rel_path = subdir[len(parent)+1:]
-        sql_query = 'SELECT size FROM dir_entry WHERE tree = :subdir AND path = "";'
-        self._curs.execute(sql_query, {'subdir': subdir_id})
-        subtree_size = self._curs.fetchone()[0]
-        sql_query = 'UPDATE dir_entry SET tree = :parent , path = :prefix WHERE tree = :subdir AND path == "";'
-        self._curs.execute(sql_query, {'parent': parent_id, 'prefix': rel_path, 'subdir': subdir_id})
-        sql_query = 'UPDATE dir_entry SET tree = :parent , path = :prefix || path WHERE tree = :subdir AND path != "";'
-        self._curs.execute(sql_query, {'parent': parent_id, 'prefix': rel_path + os.path.sep, 'subdir': subdir_id})
-        dirs = os.path.dirname(rel_path)
-        while dirs:
-            sql_query = 'UPDATE dir_entry SET size = size + :size WHERE tree = :tree AND path = :dirs;'
-            self._curs.execute(sql_query, {'size': subtree_size, 'tree': parent_id, 'dirs': dirs})
-            dirs = os.path.dirname(dirs)
-        sql_query = 'UPDATE dir_entry SET size = size + :size WHERE tree = :tree AND path = "";'
-        self._curs.execute(sql_query, {'size': subtree_size, 'tree': parent_id})
-        sql_query = 'DELETE FROM tree WHERE root_dir = :subdir;'
-        self._curs.execute(sql_query, {'subdir': subdir})
-
     def scan(self, root_scan):
         """
         """
@@ -132,7 +105,8 @@ class DirScanner(commons.FindupsCommons):
                     dir_path = os.path.join(root, dir)
                     if dir_path in subdirs:
                         print("Scanning subdirectory %s not needed, since previously scanned" % dir_path)
-                        self._change_parent(root_scan, dir_path)
+                        logging.info('Moving tree %s to hang from %s' % (dir_path, root_scan))
+                        self._dir_entry_cmp.change_parent(dir_path)
                     else:
                         dirs_to_process.append(dir)
                 dirs[:] = dirs_to_process
