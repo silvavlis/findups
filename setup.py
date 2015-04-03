@@ -5,11 +5,11 @@ import setuptools
 setuptools.setup(
         name = 'findups',
         version = '15.1',
-        description = 'Find duplicates',
+        description = 'Find duplicates across multiple devices.',
         author = 'Silvano Cirujano Cuesta',
         author_email = 'silvanociru@gmx.net',
         url = 'https://github.com/silvavlis/findups',
-        packages = setuptools.find_packages(exclude = ['ez_setup']),
+        packages = setuptools.find_packages(exclude=['ez_setup']),
         include_package_data = True,
         zip_safe = False,
         scripts = ['bin/findups'],
