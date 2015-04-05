@@ -4,7 +4,7 @@ import setuptools
 
 setuptools.setup(
         name = 'findups',
-        version = '15.1',
+        version = '15.4',
         description = 'Find duplicates across multiple devices.',
         author = 'Silvano Cirujano Cuesta',
         author_email = 'silvanociru@gmx.net',
