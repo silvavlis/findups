@@ -11,10 +11,10 @@ import os.path
 import logging
 import sqlite3
 # findups packages
-import comparors.comparor
+import findups.comparors.comparor
 
 
-class DirEntry(comparors.comparor.Comparor):
+class DirEntry(findups.comparors.comparor.Comparor):
     def __init__(self, db_conn):
         """
         """

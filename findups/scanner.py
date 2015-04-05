@@ -13,10 +13,10 @@ import sqlite3
 import logging
 import stat
 # findups packages
-import commons
-import comparors.dir_entry as dir_entry_cmp
-import comparors.mtime as mtime_cmp
-import comparors.size as size_cmp
+import findups.commons
+import findups.comparors.dir_entry as dir_entry_cmp
+import findups.comparors.mtime as mtime_cmp
+import findups.comparors.size as size_cmp
 
 _SIZE = 1
 SAME_SIZE = _SIZE  # 1
@@ -24,7 +24,7 @@ _FILE = 8
 SAME_FILE = _FILE | SAME_SIZE  # 15
 
 
-class DirScanner(commons.FindupsCommons):
+class DirScanner(findups.commons.FindupsCommons):
     def __init__(self, device_id, db_path='', accuracy=SAME_SIZE,
                  log_level=logging.WARNING,
                  log_file=os.path.join(os.getenv('HOME'), '.findups.log')):
