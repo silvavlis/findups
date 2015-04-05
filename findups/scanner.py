@@ -113,12 +113,15 @@ class DirScanner(findups.commons.FindupsCommons):
             dir_size = 0
             for filename in files:
                 file_path = os.path.join(root, filename)
-                if file_path == self._db_location:
+                try:
+                    if file_path == self._db_location:
+                        continue
+                    if stat.S_ISSOCK(os.stat(file_path).st_mode):
+                        continue
+                    file_size = os.path.getsize(file_path)
+                    file_mtime = os.path.getmtime(file_path)
+                except FileNotFoundError:
                     continue
-                if stat.S_ISSOCK(os.stat(file_path).st_mode):
-                    continue
-                file_size = os.path.getsize(file_path)
-                file_mtime = os.path.getmtime(file_path)
                 self._size_cmp.add(file_size)
                 self._mtime_cmp.add(file_mtime)
                 rel_file_path = os.path.join(rel_root, filename)
