@@ -35,6 +35,7 @@ class FindupsCommons(object):
         new_db = not os.path.isfile(db_path)
 
         self._db_conn = sqlite3.connect(self._db_location)
+        self._db_conn.text_factory = str
         self._curs = self._db_conn.cursor()
         if new_db:
             self._db_schema()
