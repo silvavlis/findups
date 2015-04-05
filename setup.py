@@ -9,7 +9,7 @@ setuptools.setup(
         author = 'Silvano Cirujano Cuesta',
         author_email = 'silvanociru@gmx.net',
         url = 'https://github.com/silvavlis/findups',
-        packages = setuptools.find_packages(exclude=['ez_setup']),
+        packages = ['findups', 'findups.comparors'],
         include_package_data = True,
         zip_safe = False,
         scripts = ['bin/findups'],
