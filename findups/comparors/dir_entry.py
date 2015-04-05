@@ -50,6 +50,10 @@ class DirEntry(findups.comparors.comparor.Comparor):
         self._curs.execute(sql_query, {'subdir': subdir})
 
     def add(self, path, type, size, mtime):
+        if type == "dir":
+            logging.info("New directory: %s" % path)
+        else:
+            logging.info("New file: %s" % path)
         try:
             self._curs.execute('INSERT INTO dir_entry(tree, path, type, size, mtime) '
                                'VALUES (:tree, :path, :type, :size, :mtime);',
@@ -59,9 +63,7 @@ class DirEntry(findups.comparors.comparor.Comparor):
                 print(str(e) + ' -> ' + name)
             else:
                 raise
-        if type == "dir":
-            logging.info("New directory: %s" % path)
-        else:
+        if type == "file":
             dirs = os.path.dirname(path)
             while dirs:
                 self._curs.execute('UPDATE dir_entry SET size = size + :size WHERE tree = :tree AND path = :dirs;',
@@ -69,6 +71,5 @@ class DirEntry(findups.comparors.comparor.Comparor):
                 dirs = os.path.dirname(dirs)
             self._curs.execute('UPDATE dir_entry SET size = size + :size WHERE tree = :tree AND path = "";',
                 {'size': size, 'tree': self._tree_id})
-            logging.info("New file: %s" % path)
         self._db_conn.commit()
         return self._curs.lastrowid
