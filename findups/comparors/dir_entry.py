@@ -50,6 +50,9 @@ class DirEntry(findups.comparors.comparor.Comparor):
         self._curs.execute(sql_query, {'subdir': subdir})
 
     def add(self, path, type, size, mtime):
+        path = path.encode("utf-8", "surrogateescape")
+        if not path:
+            path = u""
         if type == "dir":
             logging.info("New directory: %s" % path)
         else:
