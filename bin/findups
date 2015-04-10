@@ -15,12 +15,13 @@ import socket
 import time
 # findups packages
 import findups.scanner
+import findups.comparer
 
 
 def main():
     hostname = socket.gethostname()
     parser = argparse.ArgumentParser()
-    parser.add_argument('--db_path', action="append",
+    parser.add_argument('--db_path', action="store",
                         default=[os.path.join(os.getenv("HOME"), hostname + ".db")],
                         help="Path of the DB")
     parser.add_argument('--debug', action="store_true",
@@ -43,7 +44,7 @@ def main():
     if ns.action == 'scan':
         while ns.directories:
             start = time.time()
-            scanner = findups.scanner.DirScanner(device_id=ns.device_id, db_path=ns.db_path[0], log_level=log_level,
+            scanner = findups.scanner.DirScanner(device_id=ns.device_id, db_path=ns.db_path, log_level=log_level,
                                                  accuracy=accuracy)
             directory = ns.directories.pop()
             n_files, total_size = scanner.scan(directory)
@@ -54,6 +55,9 @@ def main():
             print('%d files adding up to %d KBs have been scanned in %d seconds' %
                   (n_files, int(total_size/1024), duration))
             print('%d files/second' % (int(n_files/duration)))
+    elif ns.action == 'compare':
+        comparer = findups.comparer.DirComparer(db_path=ns.db_path, log_level=log_level, accuracy=accuracy)
+        comparer.compare()
 
 if __name__ == '__main__':
     main()

@@ -32,7 +32,7 @@ class FindupsCommons(object):
 
         self._db_location = os.path.expanduser(db_path)
         logging.debug("DB path: %s" % self._db_location)
-        new_db = not os.path.isfile(db_path)
+        new_db = not os.path.isfile(self._db_location)
 
         self._db_conn = sqlite3.connect(self._db_location)
         self._db_conn.text_factory = str

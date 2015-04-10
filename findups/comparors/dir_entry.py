@@ -63,7 +63,7 @@ class DirEntry(findups.comparors.comparor.Comparor):
                                {'tree': self._tree_id, 'path': path, 'type': type, 'size': size, 'mtime': mtime})
         except sqlite3.ProgrammingError as e:
             if str(e).startswith('You must not use 8-bit bytestrings'):
-                print(str(e) + ' -> ' + name)
+                print(str(e) + ' -> ' + path)
             else:
                 raise
         if type == "file":
@@ -76,3 +76,34 @@ class DirEntry(findups.comparors.comparor.Comparor):
                 {'size': size, 'tree': self._tree_id})
         self._db_conn.commit()
         return self._curs.lastrowid
+
+    def duplicates(self):
+        sql_query = 'SELECT tree, path, size, COUNT(*) c FROM dir_entry ' + \
+                    'WHERE type = "dir" AND size > 0 GROUP BY size HAVING c > 1 ' + \
+                    'ORDER BY size DESC;'
+        self._curs.execute(sql_query)
+        dup_sizes = [size[2] for size in self._curs.fetchall()]
+        for size in dup_sizes:
+            logging.debug("Looking for possible duplicates with size %d" % size)
+            sql_query = 'SELECT path FROM dir_entry ' + \
+                        'WHERE type = "dir" AND size = :size ORDER BY path ASC;'
+            self._curs.execute(sql_query, {'size': size})
+            tmp_dirs = [dir[0] for dir in self._curs.fetchall()]
+            dirs = []
+            dir = tmp_dirs.pop(0)
+            while tmp_dirs:
+                next_dir = tmp_dirs.pop(0)
+                if dir not in next_dir:
+                    dirs.append(dir)
+                dir = next_dir
+            dirs.append(next_dir)
+            if len(dirs) < 2:
+                continue
+            logging.info("Directories that possibly are duplicates: %s" % str(dirs))
+            dir_trees = {}
+            for dir in dirs:
+                sql_query = 'SELECT path, size FROM dir_entry ' + \
+                            'WHERE type = "dir" AND path LIKE :parent ' + \
+                            'ORDER BY path ASC;'
+                self._curs.execute(sql_query, {'parent': '%s%%' % dir})
+                children = self._curs.fetchall()
