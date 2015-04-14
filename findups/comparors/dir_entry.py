@@ -77,33 +77,73 @@ class DirEntry(findups.comparors.comparor.Comparor):
         self._db_conn.commit()
         return self._curs.lastrowid
 
+    def _get_children_info(self, info_item, dir):
+        sql_query = "SELECT type, %s FROM dir_entry " % info_item + \
+                    "WHERE path LIKE :parent ORDER BY path ASC;"
+        self._curs.execute(sql_query, {'parent': dir + b'%'})
+        return (self._curs.fetchall())[1:]
+
     def duplicates(self):
-        sql_query = 'SELECT tree, path, size, COUNT(*) c FROM dir_entry ' + \
+        """Get all the directories and files that appear to be duplicated only considering their size and that of their
+        children (in the case of directories)."""
+        # get the sizes that appear on more than one directory
+        sql_query = 'SELECT size, COUNT(*) c FROM dir_entry ' + \
                     'WHERE type = "dir" AND size > 0 GROUP BY size HAVING c > 1 ' + \
                     'ORDER BY size DESC;'
         self._curs.execute(sql_query)
-        dup_sizes = [size[2] for size in self._curs.fetchall()]
+        dup_sizes = [size[0] for size in self._curs.fetchall()]
+        grouped_duplicates = []
+        # look the possible duplicates for each size
         for size in dup_sizes:
             logging.debug("Looking for possible duplicates with size %d" % size)
+            # get all the directories with the same size
             sql_query = 'SELECT path FROM dir_entry ' + \
                         'WHERE type = "dir" AND size = :size ORDER BY path ASC;'
             self._curs.execute(sql_query, {'size': size})
             tmp_dirs = [dir[0] for dir in self._curs.fetchall()]
+            # don't consider the parent if single child (they have the same size)
             dirs = []
-            dir = tmp_dirs.pop(0)
+            directory = tmp_dirs.pop(0)
             while tmp_dirs:
                 next_dir = tmp_dirs.pop(0)
-                if dir not in next_dir:
-                    dirs.append(dir)
-                dir = next_dir
+                if directory not in next_dir:
+                    dirs.append(directory)
+                directory = next_dir
             dirs.append(next_dir)
+            # if no more potential duplicates (all dirs with same child are single children of the same dir),
+            # go to next size
             if len(dirs) < 2:
                 continue
-            logging.info("Directories that possibly are duplicates: %s" % str(dirs))
-            dir_trees = {}
-            for dir in dirs:
-                sql_query = 'SELECT path, size FROM dir_entry ' + \
-                            'WHERE type = "dir" AND path LIKE :parent ' + \
-                            'ORDER BY path ASC;'
-                self._curs.execute(sql_query, {'parent': '%s%%' % dir})
-                children = self._curs.fetchall()
+            logging.debug("Directories that possibly are duplicates: %s" % str(dirs))
+            # get sizes of all children for each remaining directory
+            trees = {}
+            for directory in dirs:
+                trees[directory] = self._get_children_info('size', directory)
+            # get the number of items (files and directories) in each tree
+            tree_n_items = {dir: len(trees[dir]) for dir in trees.keys()}
+            # only possible duplicates if at least two trees with same number of items
+            if len(set(tree_n_items.values())) != len(tree_n_items.values()):
+                # get repeated number of items
+                tree_n_items_values = list(tree_n_items.values())
+                dup_n_items = set([x for x in tree_n_items_values if tree_n_items_values.count(x) > 1])
+                # if some repeated number of items
+                if dup_n_items:
+                    # for each repeated number of items
+                    for n_items in dup_n_items:
+                        # compare all trees with that number of items
+                        candidates_dup = {directory: trees[directory] for directory in trees.keys()
+                                          if len(trees[directory]) == n_items}
+                        directories = list(candidates_dup.keys())
+                        while directories and (len(directories) > 1):
+                            directory = directories.pop()
+                            other_trees = {other_dir: trees[other_dir] for other_dir in trees.keys()
+                                          if other_dir != directory}
+                            duplicates = []
+                            for other_dir in other_trees.keys():
+                                if trees[directory] == other_trees[other_dir]:
+                                    if not duplicates:
+                                        duplicates.append(directory)
+                                    duplicates.append(other_dir)
+                            logging.info("Duplicates: %s" % duplicates)
+                            grouped_duplicates.append(duplicates)
+        return grouped_duplicates
