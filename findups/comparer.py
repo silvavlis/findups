@@ -29,8 +29,12 @@ class DirComparer(findups.commons.FindupsCommons):
         super(DirComparer, self).__init__(db_path=db_path, accuracy=accuracy, log_level=log_level, log_file=log_file)
         self._dir_entry_cmp = dir_entry_cmp.DirEntry(self._db_conn)
 
-    def compare(self):
+    def duplicates(self):
         """
         """
         print("-----------------\nLooking for duplicates (accuracy=%s)" % self._accuracy)
-        self._dir_entry_cmp.duplicates()
+        duplicates = self._dir_entry_cmp.duplicates()
+        if duplicates:
+            return True
+        else:
+            return False

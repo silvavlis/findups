@@ -57,7 +57,8 @@ def main():
             print('%d files/second' % (int(n_files/duration)))
     elif ns.action == 'compare':
         comparer = findups.comparer.DirComparer(db_path=ns.db_path, log_level=log_level, accuracy=accuracy)
-        comparer.compare()
+        if comparer.duplicates():
+            print("Duplicates found! You can view them in...")
 
 if __name__ == '__main__':
     main()
