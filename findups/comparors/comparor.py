@@ -21,3 +21,9 @@ class Comparor:
         adds new value to DB
         '''
         pass
+
+    def _get_children_info(self, info_item, dir):
+        sql_query = "SELECT type, %s FROM dir_entry " % info_item + \
+                    "WHERE path LIKE :parent ORDER BY path ASC;"
+        self._curs.execute(sql_query, {'parent': dir + b'%'})
+        return (self._curs.fetchall())[1:]

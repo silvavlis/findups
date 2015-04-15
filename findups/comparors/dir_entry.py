@@ -77,12 +77,6 @@ class DirEntry(findups.comparors.comparor.Comparor):
         self._db_conn.commit()
         return self._curs.lastrowid
 
-    def _get_children_info(self, info_item, dir):
-        sql_query = "SELECT type, %s FROM dir_entry " % info_item + \
-                    "WHERE path LIKE :parent ORDER BY path ASC;"
-        self._curs.execute(sql_query, {'parent': dir + b'%'})
-        return (self._curs.fetchall())[1:]
-
     def duplicates(self):
         """Get all the directories and files that appear to be duplicated only considering their size and that of their
         children (in the case of directories)."""
