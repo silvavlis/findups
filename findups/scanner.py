@@ -15,8 +15,6 @@ import stat
 # findups packages
 import findups.commons
 import findups.comparors.dir_entry as dir_entry_cmp
-import findups.comparors.mtime as mtime_cmp
-import findups.comparors.size as size_cmp
 
 _SIZE = 1
 SAME_SIZE = _SIZE  # 1
@@ -40,8 +38,6 @@ class DirScanner(findups.commons.FindupsCommons):
                 raise
             logging.debug("Device %s is not new" % device_id)
         self._dir_entry_cmp = dir_entry_cmp.DirEntry(self._db_conn)
-        self._mtime_cmp = mtime_cmp.Mtime(self._db_conn)
-        self._size_cmp = size_cmp.Size(self._db_conn)
 
     def _is_subdir(self, dir):
         sql_query = 'SELECT root_dir FROM tree WHERE (device=:device) AND (root_dir=substr(:dir,1,length(root_dir)));'
@@ -122,8 +118,6 @@ class DirScanner(findups.commons.FindupsCommons):
                     file_mtime = os.path.getmtime(file_path)
                 except FileNotFoundError:
                     continue
-                self._size_cmp.add(file_size)
-                self._mtime_cmp.add(file_mtime)
                 rel_file_path = os.path.join(rel_root, filename)
                 self._dir_entry_cmp.add(rel_file_path, type="file", size=file_size, mtime=file_mtime)
                 n_files += 1

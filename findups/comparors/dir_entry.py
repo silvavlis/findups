@@ -12,6 +12,8 @@ import logging
 import sqlite3
 # findups packages
 import findups.comparors.comparor
+import findups.comparors.mtime as mtime_cmp
+import findups.comparors.size as size_cmp
 
 
 class DirEntry(findups.comparors.comparor.Comparor):
@@ -20,6 +22,8 @@ class DirEntry(findups.comparors.comparor.Comparor):
         """
         self._db_conn = db_conn
         self._curs = self._db_conn.cursor()
+        self._mtime_cmp = mtime_cmp.Mtime(self._db_conn)
+        self._size_cmp = size_cmp.Size(self._db_conn)
 
     def set_tree(self, tree_id):
         self._tree_id = tree_id
@@ -50,6 +54,8 @@ class DirEntry(findups.comparors.comparor.Comparor):
         self._curs.execute(sql_query, {'subdir': subdir})
 
     def add(self, path, type, size, mtime):
+        self._size_cmp.add(size)
+        self._mtime_cmp.add(mtime)
         path = path.encode("utf-8", "surrogateescape")
         if not path:
             path = u""
