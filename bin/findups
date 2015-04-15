@@ -22,7 +22,7 @@ def main():
     hostname = socket.gethostname()
     parser = argparse.ArgumentParser()
     parser.add_argument('--db_path', action="store",
-                        default=[os.path.join(os.getenv("HOME"), hostname + ".db")],
+                        default=os.path.join(os.getenv("HOME"), hostname + ".db"),
                         help="Path of the DB")
     parser.add_argument('--debug', action="store_true",
                         help="Enable debugging")
