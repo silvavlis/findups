@@ -11,7 +11,8 @@ import logging
 
 class Comparor:
     def __init__(self, db_conn, logger):
-        pass
+        self.db_conn = db_conn
+        self._curs = self.db_conn.cursor()
 
     def has(self, file_id):
         '''
@@ -26,8 +27,9 @@ class Comparor:
         pass
 
     def _get_children_info(self, info_item, dir):
-        sql_query = "SELECT type, %s FROM dir_entry " % info_item + \
+        sql_query = "SELECT type, {info_item} FROM dir_entry " + \
                     "WHERE path LIKE :parent ORDER BY path ASC;"
+        sql_query = sql_query.format(info_item=info_item)
         self._curs.execute(sql_query, {'parent': dir + b'%'})
         return (self._curs.fetchall())[1:]
 
@@ -60,4 +62,48 @@ class Comparor:
                                 duplicates.append(other_dir)
                         logging.info("Duplicates: %s" % duplicates)
                         grouped_duplicates.append(duplicates)
+        return grouped_duplicates
+
+    def _duplicates(self, value_type):
+        """Get all the directories and files that appear to be duplicated only considering 'value_type' and that of
+        their children (in the case of directories)."""
+        # get the 'values' that appear on more than one directory
+        sql_query = 'SELECT {value_type}, COUNT(*) c FROM dir_entry ' + \
+                    'WHERE type = "dir" AND {value_type} > 0 GROUP BY {value_type} HAVING c > 1 ' + \
+                    'ORDER BY {value_type} DESC;'
+        sql_query = sql_query.format(value_type=value_type)
+        self._curs.execute(sql_query)
+        dup_values = [value[0] for value in self._curs.fetchall()]
+        grouped_duplicates = []
+        # look the possible duplicates for each 'value'
+        for value in dup_values:
+            logging.debug("Looking for possible duplicates with {value_type} {value}".format(value_type=value_type,
+                                                                                             value=value))
+            # get all the directories with 'value' ordered to get first parents and then theirs children
+            sql_query = 'SELECT path FROM dir_entry WHERE type = "dir" AND {value_type} = :value ' + \
+                        'ORDER BY path ASC;'
+            sql_query = sql_query.format(value_type=value_type)
+            self._curs.execute(sql_query, {'value': value})
+            tmp_dirs = [dir[0] for dir in self._curs.fetchall()]
+            # if a parent and its child in the list (single child, therefore they have the same 'value'),
+            # remove the parent from the list
+            dirs = []
+            directory = tmp_dirs.pop(0)
+            while tmp_dirs:
+                next_dir = tmp_dirs.pop(0)
+                if directory not in next_dir:
+                    dirs.append(directory)
+                directory = next_dir
+            dirs.append(next_dir)
+            # if no more potential duplicates (all dirs with same child are single children of the same dir),
+            # go to next 'value'
+            if len(dirs) < 2:
+                continue
+            logging.debug("Directories that possibly are duplicates: {directories!s}".format(directories=dirs))
+            # get 'values' of all children for each remaining directory
+            trees = {}
+            for directory in dirs:
+                trees[directory] = self._get_children_info(value_type, directory)
+            grouped_duplicates.extend(self._get_duplicates(trees))
+            #TODO: address cornercase "I forgot it..."
         return grouped_duplicates
