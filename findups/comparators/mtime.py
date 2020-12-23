@@ -10,10 +10,10 @@ __license__ = "MPL-2.0"
 import sqlite3
 import logging
 # findups packages
-import findups.comparors.comparor
+import findups.comparators.comparator
 
 
-class Mtime(findups.comparors.comparor.Comparor):
+class Mtime(findups.comparators.comparator.Comparator):
     def __init__(self, db_conn):
         """
         """

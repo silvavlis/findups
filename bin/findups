@@ -15,7 +15,7 @@ import socket
 import time
 # findups packages
 import findups.scanner
-import findups.comparer
+import findups.comparator
 
 
 def main():
@@ -56,8 +56,8 @@ def main():
                   (n_files, int(total_size/1024), duration))
             print('%d files/second' % (int(n_files/duration)))
     elif ns.action == 'compare':
-        comparer = findups.comparer.DirComparer(db_path=ns.db_path, log_level=log_level, accuracy=accuracy)
-        if comparer.duplicates():
+        comparator = findups.comparator.DirComparer(db_path=ns.db_path, log_level=log_level, accuracy=accuracy)
+        if comparator.duplicates():
             print("Duplicates found! You can view them in...")
 
 if __name__ == '__main__':

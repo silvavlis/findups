@@ -14,7 +14,7 @@ import logging
 import stat
 # findups packages
 import findups.commons
-import findups.comparors.dir_entry as dir_entry_cmp
+import findups.comparators.dir_entry as dir_entry_cmp
 
 _SIZE = 1
 SAME_SIZE = _SIZE  # 1
@@ -92,7 +92,7 @@ class DirScanner(findups.commons.FindupsCommons):
         self._dir_entry_cmp.set_tree(tree_id)
         logging.info("Scanning directory (accuracy=%s) in %s" % (self._accuracy, root_scan))
         n_files = 0
-        for root, dirs, files in os.walk(root_scan, topdown=True):
+        for root, dirs, files in os.walk(bytearray(root_scan), topdown=True):
             rel_root = root[len(root_scan)+1:]
             self._dir_entry_cmp.add(rel_root, type="dir", size=0, mtime=os.path.getmtime(root))
             if subdirs:

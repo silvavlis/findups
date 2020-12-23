@@ -9,7 +9,7 @@ __license__ = "MPL-2.0"
 import logging
 
 
-class Comparor:
+class Comparator:
     def __init__(self, db_conn, logger):
         self.db_conn = db_conn
         self._curs = self.db_conn.cursor()

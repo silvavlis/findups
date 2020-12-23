@@ -9,12 +9,10 @@ setuptools.setup(
         author = 'Silvano Cirujano Cuesta',
         author_email = 'silvanociru@gmx.net',
         url = 'https://github.com/silvavlis/findups',
-        packages = ['findups', 'findups.comparors'],
+        packages = ['findups', 'findups.comparators'],
         include_package_data = True,
         zip_safe = False,
         scripts = ['bin/findups'],
         test_suite = 'findups.test.testcases'
         )
-
-
 

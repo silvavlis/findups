@@ -12,7 +12,7 @@ import os.path
 import logging
 # findups packages
 import findups.commons
-import findups.comparors.dir_entry as dir_entry_cmp
+import findups.comparators.dir_entry as dir_entry_cmp
 
 _SIZE = 1
 SAME_SIZE = _SIZE  # 1
