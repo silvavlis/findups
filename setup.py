@@ -14,5 +14,5 @@ setuptools.setup(
         zip_safe = False,
         scripts = ['bin/findups'],
         test_suite = 'findups.test.testcases'
-        )
+    )
 

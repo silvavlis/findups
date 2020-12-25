@@ -124,3 +124,4 @@ class DirScanner(findups.commons.FindupsCommons):
         self._curs.execute('SELECT size FROM dir_entry WHERE tree = :tree AND path = "";', {'tree': tree_id})
         total_size = self._curs.fetchone()[0]
         return n_files, total_size
+
